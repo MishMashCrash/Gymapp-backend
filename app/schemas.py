@@ -17,3 +17,8 @@ class UserOut(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int]
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
