@@ -37,7 +37,7 @@ class Split(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner = relationship("User")
     description = Column(String)
     created_at = Column(
@@ -46,11 +46,25 @@ class Split(Base):
     days = relationship("SplitDay", back_populates="split", cascade="all, delete-orphan")
 
 class SplitDay(Base):
-    __tablename__ = "splitDays"
+    __tablename__ = "split_days"
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    split_id = Column(Integer, ForeignKey("splits.id", ondelete="CASCADE"))
+    order = Column(Integer, nullable=False)
+    split_id = Column(Integer, ForeignKey("splits.id", ondelete="CASCADE"), nullable=False)
     split = relationship("Split", back_populates="days")
+    exercises = relationship("SplitDayExercise", back_populates="split_day", cascade="all, delete-orphan")
 
 
+class SplitDayExercise(Base):
+    __tablename__ = "split_day_exercises"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    split_day_id = Column(Integer, ForeignKey("split_days.id", ondelete="CASCADE"), nullable=False)
+    exercise_id = Column(Integer, ForeignKey("exercises.id", ondelete="CASCADE"), nullable=False)
+    order = Column(Integer, nullable=False)
+    target_sets = Column(Integer)
+    target_reps = Column(String)
+
+    split_day = relationship("SplitDay", back_populates="exercises")
+    exercise = relationship("Exercise")
