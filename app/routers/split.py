@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .. import oauth2, schemas, database, models, utils
 from sqlalchemy import or_
+from typing import List
 
 router = APIRouter(prefix="/split", tags=["Splits"])
 
@@ -34,8 +35,10 @@ def create_split_nested(
         invalid_ids = requested_exercise_ids - accessible_ids
 
         if invalid_ids:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}")
-
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
+            )
 
     new_split = models.Split(
         name=split.name, description=split.description, owner_id=current_user.id
@@ -60,3 +63,14 @@ def create_split_nested(
     db.commit()
     db.refresh(new_split)
     return new_split
+
+
+@router.get("/", response_model=List[schemas.SplitOut])
+def get_exercises(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    splits = (
+        db.query(models.Split).filter(models.Split.owner_id == current_user.id).all()
+    )
+    return splits
