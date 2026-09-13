@@ -74,3 +74,24 @@ def get_exercises(
         db.query(models.Split).filter(models.Split.owner_id == current_user.id).all()
     )
     return splits
+
+
+@router.get("/{id}", response_model=schemas.SplitOut)
+def get_split_by_ID(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    split = (
+        db.query(models.Split)
+        .filter(models.Split.id == id, models.Split.owner_id == current_user.id)
+        .first()
+    )
+
+    if split is not None:
+        return split
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"split with id: {id} was not found",
+        )
