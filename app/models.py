@@ -43,3 +43,14 @@ class Split(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
+    days = relationship("SplitDay", back_populates="split", cascade="all, delete-orphan")
+
+class SplitDay(Base):
+    __tablename__ = "splitDays"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    split_id = Column(Integer, ForeignKey("splits.id", ondelete="CASCADE"))
+    split = relationship("Split", back_populates="days")
+
+
