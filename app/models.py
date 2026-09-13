@@ -12,3 +12,20 @@ class User(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
+
+class Exercise(Base):
+    __tablename__ = "exercises"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    primary_muscle = Column(String, nullable=False)
+    secondary_muscle = Column(String)
+    joint_action = Column(String)
+    movement_pattern = Column(String, nullable=False)
+    type = Column(String, nullable=False, server_default="custom")
+    is_public = Column(Boolean, nullable=False, server_default="False")
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    owner = relationship("User")
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
