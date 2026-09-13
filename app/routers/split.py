@@ -19,26 +19,13 @@ def create_split_nested(
         for requested_exercise in requested_day.exercises
     }
 
-    if requested_exercise_ids:
-        accessible_exercises = (
-            db.query(models.Exercise.id)
-            .filter(
-                models.Exercise.id.in_(requested_exercise_ids),
-                or_(
-                    models.Exercise.id == current_user.id,
-                    models.Exercise.type == "staple",
-                ),
-            )
-            .all()
-        )
-        accessible_ids = {row.id for row in accessible_exercises}
-        invalid_ids = requested_exercise_ids - accessible_ids
+    invalid_ids = utils.get_inaccessible_exercise_ids(requested_exercise_ids, current_user, db)
 
-        if invalid_ids:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
-            )
+    if invalid_ids:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
+        )
 
     new_split = models.Split(
         name=split.name, description=split.description, owner_id=current_user.id
