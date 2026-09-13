@@ -26,6 +26,7 @@ class Exercise(Base):
     is_public = Column(Boolean, nullable=False, server_default="False")
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     owner = relationship("User")
+    notes = Column(String)
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
