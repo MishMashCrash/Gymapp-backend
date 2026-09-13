@@ -74,3 +74,15 @@ class SplitDayExercise(Base):
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
     exercise = relationship("Exercise")
+
+class Workoutout(Base):
+    __tablename__ = "workouts"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    split_day_id = Column(Integer, ForeignKey("split_days.id", ondelete="CASCADE"), nullable=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    date = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+    notes = Column(String)
+
+    split_day = relationship("SplitDay")
+    owner = relationship("User")
