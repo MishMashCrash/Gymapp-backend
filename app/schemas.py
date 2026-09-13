@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -100,6 +100,41 @@ class SplitOut(BaseModel):
     owner: UserOut
     days: List[SplitDayCreate]
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class WorkoutSetCreate(BaseModel):
+    exercise_id: int
+    set_number: int
+    reps: int
+    weight: float
+    rpe: Optional[float] = None
+
+class WorkoutCreate(BaseModel):
+    split_day_id: Optional[int]
+    notes: Optional[str] = None
+    sets: List[WorkoutSetCreate] = Field(min_length=1)
+
+class WorkoutSetOut(BaseModel):
+    id: int
+    exercise: ExerciseOut
+    set_number: int
+    reps: int
+    weight: float
+    rpe: Optional[float]
+
+    class Config:
+        from_attributes = True
+
+
+class WorkoutOut(BaseModel):
+    id: int
+    owner_id: int
+    split_day_id: Optional[int]
+    date: datetime
+    notes: Optional[str]
+    sets: List[WorkoutSetOut]
 
     class Config:
         from_attributes = True
