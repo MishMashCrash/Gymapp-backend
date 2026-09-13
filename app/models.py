@@ -54,6 +54,9 @@ class SplitDay(Base):
     split_id = Column(Integer, ForeignKey("splits.id", ondelete="CASCADE"), nullable=False)
     split = relationship("Split", back_populates="days")
     exercises = relationship("SplitDayExercise", back_populates="split_day", cascade="all, delete-orphan")
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
 
 
 class SplitDayExercise(Base):
@@ -67,4 +70,7 @@ class SplitDayExercise(Base):
     target_reps = Column(String)
 
     split_day = relationship("SplitDay", back_populates="exercises")
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
     exercise = relationship("Exercise")

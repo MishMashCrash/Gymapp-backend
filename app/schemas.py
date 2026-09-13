@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -24,6 +24,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class ExerciseCreate(BaseModel):
     name: str
     primary_muscle: str
@@ -31,6 +32,7 @@ class ExerciseCreate(BaseModel):
     joint_action: Optional[str] = None
     movement_pattern: str
     notes: Optional[str] = None
+
 
 class ExerciseOut(BaseModel):
     id: int
@@ -43,6 +45,60 @@ class ExerciseOut(BaseModel):
     is_public: bool
     owner: UserOut
     notes: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SplitDayExerciseCreate(BaseModel):
+    exercise_id: int
+    order: int
+    target_sets: Optional[int] = None
+    target_reps: Optional[str] = None
+
+
+class SplitDayCreate(BaseModel):
+    name: str
+    order: int
+    exercises: List[SplitDayExerciseCreate]
+
+
+class SplitCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    days: List[SplitDayCreate]
+
+
+class SplitDayExerciseOut(BaseModel):
+    id: int
+    exercise: ExerciseOut
+    order: int
+    target_sets: Optional[int] = None
+    target_reps: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SplitDayOut(BaseModel):
+    id: int
+    name: str
+    order: int
+    exercises: List[SplitDayExerciseCreate]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SplitOut(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    owner: UserOut
+    days: List[SplitDayCreate]
     created_at: datetime
 
     class Config:
