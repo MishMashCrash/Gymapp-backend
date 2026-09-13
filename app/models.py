@@ -31,3 +31,15 @@ class Exercise(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
+
+class Split(Base):
+    __tablename__ = "splits"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    owner = relationship("User")
+    description = Column(String)
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
