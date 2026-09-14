@@ -97,6 +97,36 @@ def create_exercise(
     return new_exercise
 
 
+@router.patch("/{id}", response_model=schemas.ExerciseOut)
+def update_exercise(
+    id: int,
+    updates: schemas.ExerciseUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    exercise = (
+        db.query(models.Exercise)
+        .filter(
+            models.Exercise.id == id,
+            models.Exercise.owner_id == current_user.id,
+            models.Exercise.is_active == True,
+        )
+        .first()
+    )
+    if exercise is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"exercise with id: {id} was not found",
+        )
+
+    update_data = updates.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(exercise, key, value)
+    db.commit()
+    db.refresh(exercise)
+    return exercise
+
+
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_exercise(
     id: int,

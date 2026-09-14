@@ -50,6 +50,13 @@ class ExerciseOut(BaseModel):
     class Config:
         from_attributes = True
 
+class ExerciseUpdate(BaseModel):
+    name: Optional[str] = None
+    primary_muscle: Optional[str] = None
+    secondary_muscle: Optional[str] = None
+    joint_action: Optional[str] = None
+    movement_pattern: Optional[str] = None
+    notes: Optional[str] = None
 
 class SplitDayExerciseCreate(BaseModel):
     exercise_id: int
