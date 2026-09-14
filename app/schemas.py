@@ -120,6 +120,11 @@ class SplitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
+class SplitDayAdd(BaseModel):
+    name: str
+    order: int
+    exercises: List[SplitDayExerciseCreate] = []
+
 class WorkoutSetCreate(BaseModel):
     exercise_id: int
     set_number: int
