@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .. import oauth2, schemas, database, models, utils
 from fastapi.security.oauth2 import OAuth2PasswordRequestFormStrict
-from typing import List
+from typing import Optional, List
 from sqlalchemy import or_
 
 router = APIRouter(prefix="/exercise", tags=["Exercises"])
@@ -12,33 +12,39 @@ router = APIRouter(prefix="/exercise", tags=["Exercises"])
 def get_exercises(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
+    muscle_group: Optional[str] = None,
+    joint_action: Optional[str] = None,
+    movement_pattern: Optional[str] = None,
+    mine: Optional[bool] = False,
 ):
-    exercises = (
-        db.query(models.Exercise)
-        .filter(
+    if mine:
+        query = db.query(models.Exercise).filter(
+            models.Exercise.owner_id == current_user.id,
+        )
+    else:
+        query = db.query(models.Exercise).filter(
             or_(
                 models.Exercise.owner_id == current_user.id,
                 models.Exercise.type == "staple",
             )
         )
-        .all()
-    )
-    return exercises
 
-
-@router.get("/mine", response_model=List[schemas.ExerciseOut])
-def get_my_exercises(
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
-    exercises = (
-        db.query(models.Exercise)
-        .filter(
-            models.Exercise.owner_id == current_user.id,
+    if muscle_group:
+        query = query.filter(
+            or_(
+                models.Exercise.primary_muscle == muscle_group,
+                models.Exercise.secondary_muscle == muscle_group,
+            )
         )
-        .all()
-    )
-    return exercises
+    if joint_action:
+        query = query.filter(
+            models.Exercise.joint_action == joint_action,
+        )
+    if movement_pattern:
+        query = query.filter(
+            models.Exercise.movement_pattern == movement_pattern,
+        )
+    return query.all
 
 
 @router.get("/{id}", response_model=schemas.ExerciseOut)
