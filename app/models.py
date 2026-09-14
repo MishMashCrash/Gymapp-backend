@@ -38,6 +38,7 @@ class Exercise(Base):
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     owner = relationship("User")
     notes = Column(String)
+    is_active = Column(Boolean, nullable=False, server_default="true")
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )

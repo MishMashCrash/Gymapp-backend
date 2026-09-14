@@ -44,7 +44,7 @@ def get_exercises(
         query = query.filter(
             models.Exercise.movement_pattern == movement_pattern,
         )
-    return query.all
+    return query.all()
 
 
 @router.get("/{id}", response_model=schemas.ExerciseOut)
