@@ -26,6 +26,45 @@ def get_exercises(
     return exercises
 
 
+@router.get("/mine", response_model=List[schemas.ExerciseOut])
+def get_my_exercises(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    exercises = (
+        db.query(models.Exercise)
+        .filter(
+            models.Exercise.owner_id == current_user.id,
+        )
+        .all()
+    )
+    return exercises
+
+
+@router.get("/mine/{id}", response_model=schemas.ExerciseOut)
+def get_my_exercise_by_ID(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    exercise = (
+        db.query(models.Exercise)
+        .filter(
+            models.Exercise.id == id,
+            models.Exercise.owner_id == current_user.id,
+        )
+        .first()
+    )
+
+    if exercise is not None:
+        return exercise
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"exercise with id: {id} was not found",
+        )
+
+
 @router.get("/{id}", response_model=schemas.ExerciseOut)
 def get_exercise_by_ID(
     id: int,
@@ -61,7 +100,7 @@ def create_exercise(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
-    
+
     new_exercise = models.Exercise(**exercise.model_dump())
     new_exercise.owner_id = current_user.id
     new_exercise.type = "custom"
@@ -71,4 +110,3 @@ def create_exercise(
     db.refresh(new_exercise)
 
     return new_exercise
-
