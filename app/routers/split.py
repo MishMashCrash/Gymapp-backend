@@ -84,3 +84,110 @@ def get_split_by_ID(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"split with id: {id} was not found",
         )
+
+
+@router.put("/{id}", response_model=schemas.SplitOut)
+def replace_split(
+    id: int,
+    split: schemas.SplitPut,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    split = (
+        db.query(models.Split)
+        .filter(models.Split.id == id, models.Split.owner_id == current_user.id)
+        .first()
+    )
+    if split is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"split with id: {id} was not found",
+        )
+
+    requested_exercise_ids = {
+        ex.exercise_id for day in split.days for ex in day.exercises
+    }
+    invalid_ids = utils.get_inaccessible_exercise_ids(
+        requested_exercise_ids, current_user, db
+    )
+    if invalid_ids:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
+        )
+
+    split.name = split.name
+    split.description = split.description
+
+    split.days.clear()
+    db.flush()
+
+    for day_data in split.days:
+        new_day = models.SplitDay(
+            name=day_data.name, order=day_data.order, split_id=split.id
+        )
+        db.add(new_day)
+        db.flush()
+
+        for ex_data in day_data.exercises:
+            db.add(
+                models.SplitDayExercise(
+                    split_day_id=new_day.id,
+                    exercise_id=ex_data.exercise_id,
+                    order=ex_data.order,
+                    target_sets=ex_data.target_sets,
+                    target_reps=ex_data.target_reps,
+                )
+            )
+
+    db.commit()
+    db.refresh(split)
+    return split
+
+
+@router.patch("/{id}", response_model=schemas.SplitOut)
+def update_split(
+    id: int,
+    updates: schemas.SplitUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    split = (
+        db.query(models.Split)
+        .filter(models.Split.id == id, models.Split.owner_id == current_user.id)
+        .first()
+    )
+    if split is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"split with id: {id} was not found",
+        )
+
+    update_data = updates.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(split, key, value)
+
+    db.commit()
+    db.refresh(split)
+    return split
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_split(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    split = (
+        db.query(models.Split)
+        .filter(models.Split.id == id, models.Split.owner_id == current_user.id)
+        .first()
+    )
+    if split is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"split with id: {id} was not found",
+        )
+
+    db.delete(split)
+    db.commit()
