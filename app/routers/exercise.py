@@ -41,30 +41,6 @@ def get_my_exercises(
     return exercises
 
 
-@router.get("/mine/{id}", response_model=schemas.ExerciseOut)
-def get_my_exercise_by_ID(
-    id: int,
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
-    exercise = (
-        db.query(models.Exercise)
-        .filter(
-            models.Exercise.id == id,
-            models.Exercise.owner_id == current_user.id,
-        )
-        .first()
-    )
-
-    if exercise is not None:
-        return exercise
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"exercise with id: {id} was not found",
-        )
-
-
 @router.get("/{id}", response_model=schemas.ExerciseOut)
 def get_exercise_by_ID(
     id: int,
