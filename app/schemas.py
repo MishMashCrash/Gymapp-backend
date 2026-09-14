@@ -112,7 +112,7 @@ class WorkoutSetCreate(BaseModel):
     rpe: Optional[float] = None
 
 class WorkoutCreate(BaseModel):
-    split_day_id: Optional[int]
+    split_day_id: Optional[int] = None
     notes: Optional[str] = None
     sets: List[WorkoutSetCreate] = Field(min_length=1)
 

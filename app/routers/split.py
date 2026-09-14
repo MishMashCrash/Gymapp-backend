@@ -19,7 +19,9 @@ def create_split_nested(
         for requested_exercise in requested_day.exercises
     }
 
-    invalid_ids = utils.get_inaccessible_exercise_ids(requested_exercise_ids, current_user, db)
+    invalid_ids = utils.get_inaccessible_exercise_ids(
+        requested_exercise_ids, current_user, db
+    )
 
     if invalid_ids:
         raise HTTPException(
