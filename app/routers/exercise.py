@@ -20,13 +20,15 @@ def get_exercises(
     if mine:
         query = db.query(models.Exercise).filter(
             models.Exercise.owner_id == current_user.id,
+            models.Exercise.is_active == True,
         )
     else:
         query = db.query(models.Exercise).filter(
+            models.Exercise.is_active == True,
             or_(
                 models.Exercise.owner_id == current_user.id,
                 models.Exercise.type == "staple",
-            )
+            ),
         )
 
     if muscle_group:
@@ -57,6 +59,7 @@ def get_exercise_by_ID(
         db.query(models.Exercise)
         .filter(
             models.Exercise.id == id,
+            models.Exercise.is_active == True,
             or_(
                 models.Exercise.owner_id == current_user.id,
                 models.Exercise.type == "staple",
@@ -92,3 +95,25 @@ def create_exercise(
     db.refresh(new_exercise)
 
     return new_exercise
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_exercise(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    exercise = (
+        db.query(models.Exercise)
+        .filter(models.Exercise.id == id, models.Exercise.owner_id == current_user.id)
+        .first()
+    )
+
+    if exercise is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"exercise with id: {id} was not found",
+        )
+
+    exercise.is_active = False
+    db.commit()

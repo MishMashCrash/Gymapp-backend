@@ -23,6 +23,7 @@ def get_inaccessible_exercise_ids(exercise_ids: set[int],
     for row in db.query(models.Exercise.id)
     .filter(
         models.Exercise.id.in_(exercise_ids),
+        models.Exercise.is_active == True,
         or_(
             models.Exercise.owner_id == current_user.id,
             models.Exercise.type == "staple",
