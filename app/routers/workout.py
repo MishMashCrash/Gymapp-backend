@@ -64,3 +64,35 @@ def create_split_nested(
     db.refresh(new_workout)
     return new_workout
 
+
+@router.get("/", response_model=List[schemas.WorkoutOut])
+def get_exercises(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    workouts = (
+        db.query(models.Workout)
+        .filter(models.Workout.owner_id == current_user.id)
+        .all()
+    )
+    return workouts
+
+@router.get("/{id}", response_model=schemas.WorkoutOut)
+def get_workout_by_ID(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    workout = (
+        db.query(models.Workout)
+        .filter(models.Workout.id == id, models.Workout.owner_id == current_user.id)
+        .first()
+    )
+
+    if workout is not None:
+        return workout
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"workout with id: {id} was not found",
+        )

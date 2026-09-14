@@ -55,7 +55,7 @@ def create_split_nested(
 
 
 @router.get("/", response_model=List[schemas.SplitOut])
-def get_exercises(
+def get_splits(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
