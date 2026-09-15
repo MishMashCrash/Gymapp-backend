@@ -77,6 +77,7 @@ def get_exercises(
     )
     return workouts
 
+
 @router.get("/{id}", response_model=schemas.WorkoutOut)
 def get_workout_by_ID(
     id: int,
@@ -96,3 +97,65 @@ def get_workout_by_ID(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"workout with id: {id} was not found",
         )
+
+
+@router.patch("/{id}", response_model=schemas.WorkoutOut)
+def update_workout(
+    id: int,
+    updates: schemas.WorkoutUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    workout = (
+        db.query(models.Workout)
+        .filter(models.Workout.id == id, models.Workout.owner_id == current_user.id)
+        .first()
+    )
+    if workout is None:
+        raise HTTPException(
+            status_code=404, detail=f"workout with id: {id} was not found"
+        )
+
+    update_data = updates.model_dump(exclude_unset=True)
+
+    if "split_day_id" in update_data and update_data["split_day_id"] is not None:
+        split_day = (
+            db.query(models.SplitDay)
+            .join(models.Split)
+            .filter(
+                models.SplitDay.id == update_data["split_day_id"],
+                models.Split.owner_id == current_user.id,
+            )
+            .first()
+        )
+        if split_day is None:
+            raise HTTPException(
+                status_code=403, detail="Invalid or inaccessible split_day_id"
+            )
+
+    for key, value in update_data.items():
+        setattr(workout, key, value)
+
+    db.commit()
+    db.refresh(workout)
+    return workout
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_workout(
+    id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    workout = (
+        db.query(models.Workout)
+        .filter(models.Workout.id == id, models.Workout.owner_id == current_user.id)
+        .first()
+    )
+    if workout is None:
+        raise HTTPException(
+            status_code=404, detail=f"workout with id: {id} was not found"
+        )
+
+    db.delete(workout)
+    db.commit()

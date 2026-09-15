@@ -117,7 +117,7 @@ class SplitOut(BaseModel):
 class SplitPut(BaseModel):
     name: str
     description: Optional[str] = None
-    days: List[SplitDayCreate] = Field(min_length=1)
+    days: List[SplitDayCreate] = []
 
 
 class SplitUpdate(BaseModel):
@@ -160,7 +160,7 @@ class WorkoutSetCreate(BaseModel):
 class WorkoutCreate(BaseModel):
     split_day_id: Optional[int] = None
     notes: Optional[str] = None
-    sets: List[WorkoutSetCreate] = Field(min_length=1)
+    sets: List[WorkoutSetCreate] = []
 
 
 class WorkoutSetOut(BaseModel):
@@ -185,3 +185,7 @@ class WorkoutOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class WorkoutUpdate(BaseModel):
+    split_day_id: Optional[int] = None
+    notes: Optional[str] = None
