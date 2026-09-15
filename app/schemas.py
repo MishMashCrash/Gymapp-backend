@@ -189,3 +189,17 @@ class WorkoutOut(BaseModel):
 class WorkoutUpdate(BaseModel):
     split_day_id: Optional[int] = None
     notes: Optional[str] = None
+
+class WorkoutSetAdd(BaseModel):
+    exercise_id: int
+    set_number: int
+    reps: int
+    weight: float
+    rpe: Optional[float] = None
+
+
+class WorkoutSetUpdate(BaseModel):
+    set_number: Optional[int] = None
+    reps: Optional[int] = None
+    weight: Optional[float] = None
+    rpe: Optional[float] = None
