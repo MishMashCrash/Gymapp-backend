@@ -123,9 +123,7 @@ def replace_split(
     db.flush()
 
     for day in split.days:
-        new_day = models.SplitDay(
-            name=day.name, order=day.order, split_id=split.id
-        )
+        new_day = models.SplitDay(name=day.name, order=day.order, split_id=split.id)
         db.add(new_day)
         db.flush()
 
@@ -192,7 +190,9 @@ def delete_split(
     db.delete(split)
     db.commit()
 
-#---------------SplitDays---------------
+
+# ---------------SplitDays---------------
+
 
 @router.get("/{split_id}/days/{day_id}", response_model=schemas.SplitDayOut)
 def get_split_day(
@@ -245,9 +245,7 @@ def add_split_day(
             detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
         )
 
-    new_day = models.SplitDay(
-        name=day.name, order=day.order, split_id=split.id
-    )
+    new_day = models.SplitDay(name=day.name, order=day.order, split_id=split.id)
     db.add(new_day)
     db.flush()
 
@@ -265,6 +263,7 @@ def add_split_day(
     db.commit()
     db.refresh(new_day)
     return new_day
+
 
 @router.patch("/{split_id}/days/{day_id}", response_model=schemas.SplitDayOut)
 def update_split_day(
@@ -295,6 +294,7 @@ def update_split_day(
     db.refresh(day)
     return day
 
+
 @router.delete("/{split_id}/days/{day_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_split_day(
     split_id: int,
@@ -316,4 +316,146 @@ def delete_split_day(
         raise HTTPException(status_code=404, detail="Split day not found")
 
     db.delete(day)
+    db.commit()
+
+    # ---------------SplitDayExercises---------------
+
+
+@router.get(
+    "/{split_id}/days/{day_id}/exercises/{entry_id}",
+    response_model=schemas.SplitDayExerciseOut,
+)
+def get_split_day_exercise(
+    split_id: int,
+    day_id: int,
+    entry_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    entry = (
+        db.query(models.SplitDayExercise)
+        .join(models.SplitDay)
+        .join(models.Split)
+        .filter(
+            models.SplitDayExercise.id == entry_id,
+            models.SplitDayExercise.split_day_id == day_id,
+            models.SplitDay.split_id == split_id,
+            models.Split.owner_id == current_user.id,
+        )
+        .first()
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Split day exercise not found")
+    return entry
+
+
+@router.post(
+    "/{split_id}/days/{day_id}/exercises",
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.SplitDayExerciseOut,
+)
+def add_split_day_exercise(
+    split_id: int,
+    day_id: int,
+    exercise_data: schemas.SplitDayExerciseAdd,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    day = (
+        db.query(models.SplitDay)
+        .join(models.Split)
+        .filter(
+            models.SplitDay.id == day_id,
+            models.SplitDay.split_id == split_id,
+            models.Split.owner_id == current_user.id,
+        )
+        .first()
+    )
+    if day is None:
+        raise HTTPException(status_code=404, detail="Split day not found")
+
+    invalid_ids = utils.get_inaccessible_exercise_ids(
+        {exercise_data.exercise_id}, current_user, db
+    )
+    if invalid_ids:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
+        )
+
+    new_entry = models.SplitDayExercise(
+        split_day_id=day.id,
+        exercise_id=exercise_data.exercise_id,
+        order=exercise_data.order,
+        target_sets=exercise_data.target_sets,
+        target_reps=exercise_data.target_reps,
+    )
+    db.add(new_entry)
+    db.commit()
+    db.refresh(new_entry)
+    return new_entry
+
+
+@router.patch(
+    "/{split_id}/days/{day_id}/exercises/{entry_id}",
+    response_model=schemas.SplitDayExerciseOut,
+)
+def update_split_day_exercise(
+    split_id: int,
+    day_id: int,
+    entry_id: int,
+    updates: schemas.SplitDayExerciseUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    entry = (
+        db.query(models.SplitDayExercise)
+        .join(models.SplitDay)
+        .join(models.Split)
+        .filter(
+            models.SplitDayExercise.id == entry_id,
+            models.SplitDayExercise.split_day_id == day_id,
+            models.SplitDay.split_id == split_id,
+            models.Split.owner_id == current_user.id,
+        )
+        .first()
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Split day exercise not found")
+
+    update_data = updates.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(entry, key, value)
+
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+@router.delete(
+    "/{split_id}/days/{day_id}/exercises/{entry_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_split_day_exercise(
+    split_id: int,
+    day_id: int,
+    entry_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    entry = (
+        db.query(models.SplitDayExercise)
+        .join(models.SplitDay)
+        .join(models.Split)
+        .filter(
+            models.SplitDayExercise.id == entry_id,
+            models.SplitDayExercise.split_day_id == day_id,
+            models.SplitDay.split_id == split_id,
+            models.Split.owner_id == current_user.id,
+        )
+        .first()
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Split day exercise not found")
+
+    db.delete(entry)
     db.commit()

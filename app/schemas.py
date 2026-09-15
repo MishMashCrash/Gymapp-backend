@@ -50,6 +50,7 @@ class ExerciseOut(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ExerciseUpdate(BaseModel):
     name: Optional[str] = None
     primary_muscle: Optional[str] = None
@@ -57,6 +58,7 @@ class ExerciseUpdate(BaseModel):
     joint_action: Optional[str] = None
     movement_pattern: Optional[str] = None
     notes: Optional[str] = None
+
 
 class SplitDayExerciseCreate(BaseModel):
     exercise_id: int
@@ -111,23 +113,41 @@ class SplitOut(BaseModel):
     class Config:
         from_attributes = True
 
+
 class SplitPut(BaseModel):
     name: str
     description: Optional[str] = None
     days: List[SplitDayCreate] = Field(min_length=1)
 
+
 class SplitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+
 
 class SplitDayAdd(BaseModel):
     name: str
     order: int
     exercises: List[SplitDayExerciseCreate] = []
 
+
 class SplitDayUpdate(BaseModel):
     name: Optional[str] = None
-    order: Optional[int] = None    
+    order: Optional[int] = None
+
+
+class SplitDayExerciseAdd(BaseModel):
+    exercise_id: int
+    order: int
+    target_sets: Optional[int] = None
+    target_reps: Optional[str] = None
+
+
+class SplitDayExerciseUpdate(BaseModel):
+    order: Optional[int] = None
+    target_sets: Optional[int] = None
+    target_reps: Optional[str] = None
+
 
 class WorkoutSetCreate(BaseModel):
     exercise_id: int
@@ -136,10 +156,12 @@ class WorkoutSetCreate(BaseModel):
     weight: float
     rpe: Optional[float] = None
 
+
 class WorkoutCreate(BaseModel):
     split_day_id: Optional[int] = None
     notes: Optional[str] = None
     sets: List[WorkoutSetCreate] = Field(min_length=1)
+
 
 class WorkoutSetOut(BaseModel):
     id: int
