@@ -125,6 +125,10 @@ class SplitDayAdd(BaseModel):
     order: int
     exercises: List[SplitDayExerciseCreate] = []
 
+class SplitDayUpdate(BaseModel):
+    name: Optional[str] = None
+    order: Optional[int] = None    
+
 class WorkoutSetCreate(BaseModel):
     exercise_id: int
     set_number: int

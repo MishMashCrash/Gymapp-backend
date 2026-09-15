@@ -265,3 +265,55 @@ def add_split_day(
     db.commit()
     db.refresh(new_day)
     return new_day
+
+@router.patch("/{split_id}/days/{day_id}", response_model=schemas.SplitDayOut)
+def update_split_day(
+    split_id: int,
+    day_id: int,
+    updates: schemas.SplitDayUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    day = (
+        db.query(models.SplitDay)
+        .join(models.Split)
+        .filter(
+            models.SplitDay.id == day_id,
+            models.SplitDay.split_id == split_id,
+            models.Split.owner_id == current_user.id,
+        )
+        .first()
+    )
+    if day is None:
+        raise HTTPException(status_code=404, detail="Split day not found")
+
+    update_data = updates.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(day, key, value)
+
+    db.commit()
+    db.refresh(day)
+    return day
+
+@router.delete("/{split_id}/days/{day_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_split_day(
+    split_id: int,
+    day_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    day = (
+        db.query(models.SplitDay)
+        .join(models.Split)
+        .filter(
+            models.SplitDay.id == day_id,
+            models.SplitDay.split_id == split_id,
+            models.Split.owner_id == current_user.id,
+        )
+        .first()
+    )
+    if day is None:
+        raise HTTPException(status_code=404, detail="Split day not found")
+
+    db.delete(day)
+    db.commit()
