@@ -17,7 +17,7 @@ class UserOut(BaseModel):
 
 
 class TokenData(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None
 
 
 class Token(BaseModel):
@@ -38,8 +38,8 @@ class ExerciseOut(BaseModel):
     id: int
     name: str
     primary_muscle: str
-    secondary_muscle: Optional[str]
-    joint_action: Optional[str]
+    secondary_muscle: Optional[str] = None
+    joint_action: Optional[str] = None
     movement_pattern: str
     type: str
     is_public: bool
@@ -95,7 +95,7 @@ class SplitDayOut(BaseModel):
     id: int
     name: str
     order: int
-    exercises: List[SplitDayExerciseCreate]
+    exercises: List[SplitDayExerciseOut]
     created_at: datetime
 
     class Config:
@@ -107,7 +107,7 @@ class SplitOut(BaseModel):
     name: str
     description: Optional[str] = None
     owner: UserOut
-    days: List[SplitDayCreate]
+    days: List[SplitDayOut]
     created_at: datetime
 
     class Config:
@@ -177,7 +177,7 @@ class WorkoutSetOut(BaseModel):
 
 class WorkoutOut(BaseModel):
     id: int
-    owner_id: int
+    owner: UserOut
     split_day_id: Optional[int]
     date: datetime
     notes: Optional[str]

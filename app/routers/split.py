@@ -89,7 +89,7 @@ def get_split_by_ID(
 @router.put("/{id}", response_model=schemas.SplitOut)
 def replace_split(
     id: int,
-    split: schemas.SplitPut,
+    new_split: schemas.SplitPut,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
@@ -105,7 +105,7 @@ def replace_split(
         )
 
     requested_exercise_ids = {
-        ex.exercise_id for day in split.days for ex in day.exercises
+        ex.exercise_id for day in new_split.days for ex in day.exercises
     }
     invalid_ids = utils.get_inaccessible_exercise_ids(
         requested_exercise_ids, current_user, db
@@ -116,13 +116,13 @@ def replace_split(
             detail=f"Could not fetch exercise ids: {sorted(invalid_ids)}",
         )
 
-    split.name = split.name
-    split.description = split.description
+    split.name = new_split.name
+    split.description = new_split.description
 
     split.days.clear()
     db.flush()
 
-    for day in split.days:
+    for day in new_split.days:
         new_day = models.SplitDay(name=day.name, order=day.order, split_id=split.id)
         db.add(new_day)
         db.flush()
