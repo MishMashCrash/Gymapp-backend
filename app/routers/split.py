@@ -30,7 +30,10 @@ def create_split_nested(
         )
 
     new_split = models.Split(
-        name=split.name, description=split.description, owner_id=current_user.id
+        name=split.name,
+        description=split.description,
+        owner_id=current_user.id,
+        type="custom",
     )
     db.add(new_split)
     db.flush()
@@ -60,7 +63,14 @@ def get_splits(
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
     splits = (
-        db.query(models.Split).filter(models.Split.owner_id == current_user.id).all()
+        db.query(models.Split)
+        .filter(
+            or_(
+                models.Split.owner_id == current_user.id,
+                models.Split.type == "staple",
+            )
+        )
+        .all()
     )
     return splits
 
@@ -73,7 +83,13 @@ def get_split_by_ID(
 ):
     split = (
         db.query(models.Split)
-        .filter(models.Split.id == id, models.Split.owner_id == current_user.id)
+        .filter(
+            models.Split.id == id,
+            or_(
+                models.Split.owner_id == current_user.id,
+                models.Split.type == "staple",
+            ),
+        )
         .first()
     )
 
@@ -430,6 +446,7 @@ def update_split_day_exercise(
     db.commit()
     db.refresh(entry)
     return entry
+
 
 @router.delete(
     "/{split_id}/days/{day_id}/exercises/{entry_id}",

@@ -54,6 +54,7 @@ class Split(Base):
     )
     owner = relationship("User")
     description = Column(String)
+    type = Column(String, nullable=False, server_default="custom")
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )

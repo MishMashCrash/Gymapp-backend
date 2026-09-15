@@ -32,7 +32,10 @@ def create_workout_nested(
             .join(models.Split)
             .filter(
                 models.SplitDay.id == workout.split_day_id,
+                or_(
                 models.Split.owner_id == current_user.id,
+                models.Split.type == "staple",
+            )
             )
             .first()
         )
@@ -124,7 +127,10 @@ def update_workout(
             .join(models.Split)
             .filter(
                 models.SplitDay.id == update_data["split_day_id"],
+                or_(
                 models.Split.owner_id == current_user.id,
+                models.Split.type == "staple",
+            )
             )
             .first()
         )
