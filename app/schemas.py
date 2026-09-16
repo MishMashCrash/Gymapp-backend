@@ -43,7 +43,7 @@ class ExerciseOut(BaseModel):
     movement_pattern: str
     type: str
     is_public: bool
-    owner: UserOut
+    owner: Optional[UserOut] = None
     notes: Optional[str]
     created_at: datetime
 
